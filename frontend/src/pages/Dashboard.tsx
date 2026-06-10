@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import { useAuth } from '../hooks/useAuth'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from 'recharts'
 
 export default function Dashboard() {
   const { token } = useAuth()
@@ -32,7 +32,7 @@ export default function Dashboard() {
           <h2 className="font-semibold mb-2">Severity Distribution</h2>
           <PieChart width={300} height={300}>
             <Pie data={severityData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value" label>
-              {severityData.map((entry, idx) => <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />)}
+              {severityData.map((_entry, idx) => <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />)}
             </Pie>
             <Tooltip />
           </PieChart>

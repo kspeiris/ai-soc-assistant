@@ -3,30 +3,35 @@ from datetime import datetime, timedelta
 from ..models import Log, Alert, Incident, AlertSeverity
 from ..services.llm_analyzer import explain_alert
 from ..services.mitre_mapper import map_to_mitre
+from ..database import SessionLocal
 import uuid
 
-def analyze_log(log_id: str, db: Session):
-    log = db.query(Log).filter(Log.id == log_id).first()
-    if not log:
-        return
+def analyze_log(log_id: str):
+    db = SessionLocal()
+    try:
+        log = db.query(Log).filter(Log.id == log_id).first()
+        if not log:
+            return
 
-    # Rule-based detection
-    if log.event_type == "failed_login":
-        # Count recent failed logins from same IP within 1 minute
-        one_min_ago = datetime.utcnow() - timedelta(minutes=1)
-        recent = db.query(Log).filter(
-            Log.source_ip == log.source_ip,
-            Log.event_type == "failed_login",
-            Log.timestamp >= one_min_ago
-        ).count()
-        if recent >= 10:
-            create_bruteforce_alert(log, db)
-    elif log.event_type == "privilege_escalation":
-        create_privilege_alert(log, db)
-    elif "powershell" in log.raw_log.lower() and "downloadstring" in log.raw_log.lower():
-        create_malware_alert(log, db)
-    elif log.event_type == "port_scan":
-        create_portscan_alert(log, db)
+        # Rule-based detection
+        if log.event_type == "failed_login":
+            # Count recent failed logins from same IP within 1 minute
+            one_min_ago = datetime.utcnow() - timedelta(minutes=1)
+            recent = db.query(Log).filter(
+                Log.source_ip == log.source_ip,
+                Log.event_type == "failed_login",
+                Log.timestamp >= one_min_ago
+            ).count()
+            if recent >= 10:
+                create_bruteforce_alert(log, db)
+        elif log.event_type == "privilege_escalation":
+            create_privilege_alert(log, db)
+        elif "powershell" in log.raw_log.lower() and "downloadstring" in log.raw_log.lower():
+            create_malware_alert(log, db)
+        elif log.event_type == "port_scan":
+            create_portscan_alert(log, db)
+    finally:
+        db.close()
 
 def create_bruteforce_alert(log, db):
     description = f"Brute force attack detected from {log.source_ip}: {log.raw_log[:200]}"

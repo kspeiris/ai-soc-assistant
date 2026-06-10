@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const { login } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       await login(username, password)
       toast.success('Logged in')
+      navigate('/')
     } catch (err) {
       toast.error('Invalid credentials')
     }
